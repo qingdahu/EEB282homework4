@@ -239,33 +239,32 @@ module load jje/jjeutils/0.1a
 module load rstudio/0.99.9.9
 
 
-mkfifo {r6scaff,r6ctg,truseq}_fifo
-
+mkfifo {dmel_scaff,dmel_contig,my_assembly}_fifo
 
 bioawk -c fastx ' { print length($seq) } ' dmel-all-chromosome-r6.24.fasta \
 | sort -rn \
-| awk ' BEGIN { print "Assembly\tLength\dmel_scaff\t0" } { print "dmel-scaff\t" $1 } ' \
-> r6scaff_fifo &  
+| awk ' BEGIN { print "Assembly\tLength\ndmel_scaff\t0" } { print "dmel_scaff\t" $1 } ' > dmel_scaff_fifo &
 
 
 
 bioawk -c fastx ' { print length($seq) } ' dmel-contig.fa   \
 | sort -rn \
-| awk ' BEGIN { print "Assembly\tLength\dmel_contig\t0" } { print "dmel-contig\t" $1 } ' \
-> r6ctg_fifo &
+| awk ' BEGIN { print "Assembly\tLength\ndmel_contig\t0" } { print "dmel_contig\t" $1 } ' > dmel_contig_fifo &
 
 
 bioawk -c fastx ' { print length($seq) } ' unitigs.fa\
 | sort -rn \
-| awk ' BEGIN { print "Assembly\tLength\my_assembly\t0" } { print "my_assembly\t" $1 } ' \
-> truseq_fifo &
+| awk ' BEGIN { print "Assembly\tLength\nmy_assembly\t0" } { print "my_assembly\t" $1 } ' > my_assembly_fifo &
 
-plotCDF2 {r6scaff,r6ctg,truseq}_fifo /dev/stdout \
+plotCDF2 {dmel_scaff_fifo,dmel_contig_fifo,my_assembly_fifo} /dev/stdout \
 | tee plotCDF2.png \
 | display 
 
-rm {r6scaff,r6ctg,truseq}_fifo
+rm {dmel_scaff,dmel_contig,my_assembly}_fifo
 ```
+
+![CDF2 plot](https://github.com/qingdahu/EEB282homework4/blob/master/plotCDF2.png?raw=true)
+
 
 
 
