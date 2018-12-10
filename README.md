@@ -231,46 +231,41 @@ I also accidentally ran it for the scaffold. See below.
 
 ### Contiguity plot
 
+Using the FIFO example, I generated plotCDF2.png.
 
-------------------------
-fifo example 
-#!/usr/bin/env bash
+```
 module load perl
 module load jje/jjeutils/0.1a
 module load rstudio/0.99.9.9
 
-r6url="https://drive.google.com/uc?export=download&id=1sSStvljlakBAjGhON2FJe_tCj6JLE1rZ"
-trusequrl="https://drive.google.com/uc?export=download&id=0B89qjFzcZ81rdXdadmhRRkxwamc"
-
-scratchdir=/pub/jje/ee282/$USER
-mkdir -p $scratchdir; cd $scratchdir
 
 mkfifo {r6scaff,r6ctg,truseq}_fifo
 
-wget -O - -q $r6url \
-| tee >( \
-  bioawk -c fastx ' { print length($seq) } ' \
-  | sort -rn \
-  | awk ' BEGIN { print "Assembly\tLength\nFB_Scaff\t0" } { print "FB_Scaff\t" $1 } ' \
-  > r6scaff_fifo & ) \
-| faSplitByN /dev/stdin /dev/stdout 10 \
-| bioawk -c fastx ' { print length($seq) } ' \
+
+bioawk -c fastx ' { print length($seq) } ' dmel-all-chromosome-r6.24.fasta \
 | sort -rn \
-| awk ' BEGIN { print "Assembly\tLength\nFB_Ctg\t0" } { print "FB_Ctg\t" $1 } ' \
+| awk ' BEGIN { print "Assembly\tLength\dmel_scaff\t0" } { print "dmel-scaff\t" $1 } ' \
+> r6scaff_fifo &  
+
+
+
+bioawk -c fastx ' { print length($seq) } ' dmel-contig.fa   \
+| sort -rn \
+| awk ' BEGIN { print "Assembly\tLength\dmel_contig\t0" } { print "dmel-contig\t" $1 } ' \
 > r6ctg_fifo &
 
-wget -O - -q $trusequrl \
-| bioawk -c fastx ' { print length($seq) } ' \
+
+bioawk -c fastx ' { print length($seq) } ' unitigs.fa\
 | sort -rn \
-| awk ' BEGIN { print "Assembly\tLength\nTruSeq_Ctg\t0" } { print "TruSeq_Ctg\t" $1 } ' \
+| awk ' BEGIN { print "Assembly\tLength\my_assembly\t0" } { print "my_assembly\t" $1 } ' \
 > truseq_fifo &
 
 plotCDF2 {r6scaff,r6ctg,truseq}_fifo /dev/stdout \
-| tee r6_v_truseq.png \
+| tee plotCDF2.png \
 | display 
 
 rm {r6scaff,r6ctg,truseq}_fifo
-
+```
 
 
 
