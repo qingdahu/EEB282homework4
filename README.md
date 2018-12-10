@@ -162,7 +162,8 @@ dev.off()`
 
 ## Assemble a genome from MinION reads
 
-`wget https://hpc.oit.uci.edu/~solarese/ee282/iso1_onp_a2_1kb.fastq.gz
+```
+wget https://hpc.oit.uci.edu/~solarese/ee282/iso1_onp_a2_1kb.fastq.gz
 
 
 qrsh -q free128 -pe openmp 64
@@ -200,7 +201,8 @@ $miniasm -f $raw/reads.fq $processed/onp.paf.gz \
 
 awk ' $0 ~/^S/ { print ">" $2" \n" $3 } ' $processed/reads.gfa \
 | fold -w 60 \
-> $processed/unitigs.fa`
+> $processed/unitigs.fa
+```
 
 
 
