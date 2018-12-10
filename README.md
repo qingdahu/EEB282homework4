@@ -186,7 +186,188 @@ Output is 4494246. Compare to Scaffold N50 25,286,936 from https://www.ncbi.nlm.
 
 
 
+
 ### MUMmer plot
+
+
+I started by using faSplitByN to break the scaffold into contigs. 
+
+```
+module load jje/jjeutils
+faSplitByN dmel-all-chromosome-r6.24.fasta dmel-contig.fa 10
+module unload jje/jjeutils
+```
+
+For easy of coding I moved the unitig.fa and dmel-contig.fa to the same folder. 
+
+
+```
+source /pub/jje/ee282/bin/.qmbashrc
+module load gnuplot/4.6.0
+
+
+REF="dmel-contig.fa"
+PREFIX="flybase"
+SGE_TASK_ID=1
+QRY=$(ls u*.fa | head -n $SGE_TASK_ID | tail -n 1)
+PREFIX=${PREFIX}_$(basename ${QRY} .fa)
+
+
+nucmer -l 100 -c 150 -d 10 -banded -D 5 -prefix ${PREFIX} ${REF} ${QRY}
+mummerplot --fat --layout --filter -p ${PREFIX} ${PREFIX}.delta \
+  -R ${REF} -Q ${QRY} --png
+
+```
+
+Here is the result.
+
+![MUMmer plot](https://github.com/qingdahu/EEB282homework4/blob/master/flybase_unitigs.png?raw=true)
+
+
+I also accidentally ran it for the scaffold. See below. 
+
+![MUMmer with scaffold](https://github.com/qingdahu/EEB282homework4/blob/master/flybase_unitigs.scaffold.png?raw=true)
+
+
+### Contiguity plot
+
+
+------------------------
+fifo example 
+#!/usr/bin/env bash
+module load perl
+module load jje/jjeutils/0.1a
+module load rstudio/0.99.9.9
+
+r6url="https://drive.google.com/uc?export=download&id=1sSStvljlakBAjGhON2FJe_tCj6JLE1rZ"
+trusequrl="https://drive.google.com/uc?export=download&id=0B89qjFzcZ81rdXdadmhRRkxwamc"
+
+scratchdir=/pub/jje/ee282/$USER
+mkdir -p $scratchdir; cd $scratchdir
+
+mkfifo {r6scaff,r6ctg,truseq}_fifo
+
+wget -O - -q $r6url \
+| tee >( \
+  bioawk -c fastx ' { print length($seq) } ' \
+  | sort -rn \
+  | awk ' BEGIN { print "Assembly\tLength\nFB_Scaff\t0" } { print "FB_Scaff\t" $1 } ' \
+  > r6scaff_fifo & ) \
+| faSplitByN /dev/stdin /dev/stdout 10 \
+| bioawk -c fastx ' { print length($seq) } ' \
+| sort -rn \
+| awk ' BEGIN { print "Assembly\tLength\nFB_Ctg\t0" } { print "FB_Ctg\t" $1 } ' \
+> r6ctg_fifo &
+
+wget -O - -q $trusequrl \
+| bioawk -c fastx ' { print length($seq) } ' \
+| sort -rn \
+| awk ' BEGIN { print "Assembly\tLength\nTruSeq_Ctg\t0" } { print "TruSeq_Ctg\t" $1 } ' \
+> truseq_fifo &
+
+plotCDF2 {r6scaff,r6ctg,truseq}_fifo /dev/stdout \
+| tee r6_v_truseq.png \
+| display 
+
+rm {r6scaff,r6ctg,truseq}_fifo
+
+
+
+
+
+### BUSCO score
+
+
+Here is the script for busco run with unitigs. 
+
+```
+#!/bin/bash
+#
+#$ -N busco_qh
+#$ -q free128,abio128,bio,abio
+#$ -pe openmp 32
+#$ -R Y
+### -m beas
+### -M qingdah@uci.edu
+
+module load augustus/3.2.1
+module load blast/2.2.31 hmmer/3.1b2 boost/1.54.0
+source /pub/jje/ee282/bin/.buscorc
+
+INPUTTYPE="geno"
+MYLIBDIR="/pub/jje/ee282/bin/busco/lineages/"
+MYLIB="diptera_odb9"
+OPTIONS="-l ${MYLIBDIR}${MYLIB}"
+##OPTIONS="${OPTIONS} -sp 4577"
+QRY="unitigs.fa"
+MYEXT=".fa"
+
+#my busco run
+BUSCO.py -c ${NSLOTS} -i ${QRY} -m ${INPUTTYPE} -o $(basename ${QRY} ${MYEXT})_${MYLIB}${SPTAG} ${OPTIONS}
+```
+
+The results were:
+
+```
+# BUSCO version is: 2.0 
+# The lineage dataset is: diptera_odb9 (Creation date: 2016-10-21, number of species: 25, number of BUSCOs: 2799)
+# To reproduce this run: python /pub/jje/ee282/bin/busco/BUSCO.py -i unitigs.fa -o unitigs_diptera_odb9 -l /pub/jje/ee282/bin/busco/lineages/diptera_odb9/ -m genome -c 32 -sp fly
+#
+# Summarized benchmarking in BUSCO notation for file unitigs.fa
+# BUSCO was run in mode: genome
+
+        C:0.5%[S:0.5%,D:0.0%],F:1.1%,M:98.4%,n:2799
+
+        13      Complete BUSCOs (C)
+        13      Complete and single-copy BUSCOs (S)
+        0       Complete and duplicated BUSCOs (D)
+        32      Fragmented BUSCOs (F)
+        2754    Missing BUSCOs (M)
+        2799    Total BUSCO groups searched
+```
+
+I then ran busco with the flybase contig. 
+
+```
+#!/bin/bash
+#
+#$ -N busco_qh
+#$ -q free128,abio128,bio,abio
+#$ -pe openmp 32
+#$ -R Y
+### -m beas
+### -M qingdah@uci.edu
+
+module load augustus/3.2.1
+module load blast/2.2.31 hmmer/3.1b2 boost/1.54.0
+source /pub/jje/ee282/bin/.buscorc
+
+INPUTTYPE="geno"
+MYLIBDIR="/pub/jje/ee282/bin/busco/lineages/"
+MYLIB="diptera_odb9"
+OPTIONS="-l ${MYLIBDIR}${MYLIB}"
+##OPTIONS="${OPTIONS} -sp 4577"
+QRY="dmel-contig.fa"
+MYEXT=".fa"
+
+#my busco run
+BUSCO.py -c ${NSLOTS} -i ${QRY} -m ${INPUTTYPE} -o $(basename ${QRY} ${MYEXT})_${MYLIB}${SPTAG} ${OPTIONS}
+```
+
+The results for 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
