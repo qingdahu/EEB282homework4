@@ -348,7 +348,7 @@ MYEXT=".fa"
 BUSCO.py -c ${NSLOTS} -i ${QRY} -m ${INPUTTYPE} -o $(basename ${QRY} ${MYEXT})_${MYLIB}${SPTAG} ${OPTIONS}
 ```
 
-The results not completed. I misread the instructions for this question and didn't submit the job until it was too late. 
+The results were not completed. I misread the instructions for this question and didn't submit the job until it was too late. 
 
 
 
