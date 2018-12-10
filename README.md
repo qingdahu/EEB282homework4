@@ -44,7 +44,7 @@ fullgenomeseqlengths <- read.table('length.txt', sep = '\t',header = F)
 d <- density(fullgenomeseqlengths$V1) 
 jpeg('rplot-full-length.jpg')
 plot(d, main="whole genome sequence length distributions")
-dev.off()
+dev.off()`
 
 ![rplot-full-length.jpg](https://github.com/qingdahu/EEB282homework4/blob/master/rplot-full-length.jpg?raw=true)
 
@@ -52,8 +52,8 @@ dev.off()
 d <- density(fullgenomeseqgc $V1) 
 jpeg('rplot-full-gc.jpg')
 plot(d, main="whole genome sequence gc distributions")
-dev.off()
-`
+dev.off()`
+
 ![rplot-full-gc.jpg](https://github.com/qingdahu/EEB282homework4/blob/master/rplot-full-gc.jpg?raw=true)
 
 Similarly for sequences ≤ 100kb:
