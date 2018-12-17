@@ -131,17 +131,9 @@ dev.off()
 
 ![rplot-full-gc-morethan100kb.jpg](https://github.com/qingdahu/EEB282homework4/blob/master/rplot-full-gc-morethan100kb.jpg?raw=true)
 
+### Comments on "Summarize partitions of a genome assembly"
 
-
-
-
-
-
-
-
-
-
-
+Great job.
 
 # Genome assembly
 
